@@ -1,7 +1,7 @@
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
-  name: localnet1-vlan3001
+  name: localnet1-no-vlan
   namespace: node-exporter
 spec:
   config: |-
@@ -11,5 +11,5 @@ spec:
             "type": "ovn-k8s-cni-overlay", 
             "topology":"localnet", 
             "mtu": 1300, 
-            "netAttachDefName": "node-exporter/localnet1-vlan3001" 
+            "netAttachDefName": "node-exporter/localnet1-no-vlan" 
     }
