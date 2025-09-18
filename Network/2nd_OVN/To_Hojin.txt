@@ -1,0 +1,45 @@
+호진님, 
+네트워크 시험에 참고하세요.
+
+
+
+1. 여기 있는 NNCP로  기존 br-ex에 localnet 방식으로 매핑을 생성.
+2. 여기 있는 샘플 NAD로 (namespace 등은 알맞게 수정) VM이 사용할 NAD 생성
+3. VM에서 해당 NAD를 추가 네트워크로 지정
+4. VM에서 추가 네트워크에 IPaddress 설정
+   (node IP 대역 중 남는 IP 설정)
+    nmcli conn mod 'Wired connection 1' ipv4.address 10.0.38.43/18 ipv4.method manual
+    nmcli conn up 'Wired connection 1'
+    ip a 로 IP 설정과 VM의 MAC을 확인
+    (예)
+~ # ip a
+3: net1@if32: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1300 qdisc noqueue state UP group default 
+    link/ether 0a:58:0a:00:26:2b brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.0.38.43/18 brd 10.0.63.255 scope global net1
+       valid_lft forever preferred_lft forever
+    inet6 fe80::858:aff:fe00:262b/64 scope link 
+       valid_lft forever preferred_lft forever
+~ # 
+  
+5. VM에서 ping test
+    ping 10.0.38.42  << node IP라고 가정
+
+6. Web 대시보드에서 컴퓨팅 > 노드 >  해당 VM이 떠있는 노드 > 터미널 
+  (1) ip a 로 br-ex 매핑된 host의 Interface 명 확인
+  (2) tcpdump -i [INTERFACE] -e -vv -n host 10.0.38.43
+
+  -->아래와 같이 host 10.0.38.43(VM)에서 발생하는 패킷에 대해 상세히 출력됨.
+      MAC이 VM의 MAC을 표시하고 있으며, Vlan은 host Node에 지정된 VLAN을 출력하는 것을 확인할 수 있음.
+      (아래 예시는 vlan 설정이 없기 때문에 vlan 표시는 없음)
+  
+05:20:59.526045 0a:58:0a:00:26:2b > Broadcast, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Request who-has 10.0.38.42 tell 10.0.38.43, length 28
+05:21:00.549951 0a:58:0a:00:26:2b > Broadcast, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Request who-has 10.0.38.42 tell 10.0.38.43, length 28
+05:21:01.573963 0a:58:0a:00:26:2b > Broadcast, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Request who-has 10.0.38.42 tell 10.0.38.43, length 28
+05:21:02.598087 0a:58:0a:00:26:2b > Broadcast, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Request who-has 10.0.38.42 tell 10.0.38.43, length 28
+05:21:03.621953 0a:58:0a:00:26:2b > Broadcast, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Request who-has 10.0.38.42 tell 10.0.38.43, length 28
+05:21:04.645962 0a:58:0a:00:26:2b > Broadcast, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Request who-has 10.0.38.42 tell 10.0.38.43, length 28
+05:21:05.670956 0a:58:0a:00:26:2b > Broadcast, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Request who-has 10.0.38.42 tell 10.0.38.43, length 28
+
+
+
+  [  [VM]---(br-ex)-------- node------(node port /vlan100)] ------ Packet (MAC:VM맥 / vlan : 100) 
